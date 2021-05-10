@@ -23,6 +23,8 @@ import android.util.Log;
 import com.example.mlkitwithcamera.GraphicOverlay.Graphic;
 import com.google.mlkit.vision.text.Text;
 
+import static java.lang.Math.*;
+
 /**
  * Graphic instance for rendering TextBlock position, size, and ID within an associated graphic
  * overlay view.
@@ -31,17 +33,21 @@ public class TextGraphic extends Graphic {
 
     private static final String TAG = "TextGraphic";
     private static final int TEXT_COLOR = Color.GREEN;
-    private static final float TEXT_SIZE = 54.0f;
     private static final float STROKE_WIDTH = 4.0f;
-
+    float textSize = 54.0f;
     private final Paint rectPaint;
     private final Paint textPaint;
     private final Text.Element element;
 
-    TextGraphic(GraphicOverlay overlay, Text.Element element) {
+    private int width;
+    private int height;
+
+    TextGraphic(GraphicOverlay overlay, Text.Element element, int width, int height) {
         super(overlay);
 
         this.element = element;
+        this.width = width;
+        this.height = height;
 
         rectPaint = new Paint();
         rectPaint.setColor(TEXT_COLOR);
@@ -50,7 +56,7 @@ public class TextGraphic extends Graphic {
 
         textPaint = new Paint();
         textPaint.setColor(TEXT_COLOR);
-        textPaint.setTextSize(TEXT_SIZE);
+        textPaint.setTextSize(textSize);
         // Redraw the overlay, as this graphic has been added.
         postInvalidate();
     }
@@ -60,16 +66,27 @@ public class TextGraphic extends Graphic {
      */
     @Override
     public void draw(Canvas canvas) {
-        Log.d(TAG, "on draw text graphic");
         if (element == null) {
             throw new IllegalStateException("Attempting to draw a null text.");
         }
 
         // Draws the bounding box around the TextBlock.
         RectF rect = new RectF(element.getBoundingBox());
-        canvas.drawRect(rect, rectPaint);
+//        Log.d("ok","===========" + rect.height());
+        if(rect.bottom >  width/2)
+        {
+            canvas.drawRect(3/2*width - rect.top , rect.left , rect.bottom - 2*rect.bottom + width , rect.right, rectPaint);
+        }
+        else {
+            canvas.drawRect(width - rect.top , rect.left , rect.bottom + width - 2*rect.bottom , rect.right, rectPaint);
+        }
+        textSize = (float) (rect.width()/(5.8*3));
+        textPaint.setTextSize(textSize);
 
+        canvas.rotate(90f,width - rect.top - rect.height() , rect.left);
         // Renders the text at the bottom of the box.
-        canvas.drawText(element.getText(), rect.left, rect.bottom, textPaint);
+        canvas.drawText(element.getText(),width- rect.top - rect.height() , rect.left, textPaint);
+        canvas.rotate(-90f,width - rect.top- rect.height(), rect.left);
     }
 }
+

@@ -154,54 +154,10 @@ class MainActivity : AppCompatActivity(), LuminnosityAnalyzerCallBack {
 
     @SuppressLint("UnsafeExperimentalUsageError")
     override fun onChangeTextResult(imageProxy: ImageProxy) {
-//        val source = BitmapUtils.getBitmap(imageProxy)!!
-//        val matrix = Matrix()
-//        matrix.postRotate(270f)
-//        mSelectedImage = Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
-//        val cropRect = Rect(0, 0, 500, 500)
-//        imageProxy.setCropRect(cropRect)
+
+
         mSelectedImage = BitmapUtils.getBitmap(imageProxy)
 
-        //        Spinner dropdown = findViewById(R.id.spinner);
-//        mImageView.setImageBitmap(mSelectedImage);
-//        val targetWidth = getImageMaxWidth()
-//        val maxHeight = getImageMaxHeight()
-
-        // Determine how much to scale down the image
-//        val scaleFactor = Math.max(
-//            mSelectedImage!!.width.toFloat() / getImageMaxWidth().toFloat() ,
-//            mSelectedImage!!.height.toFloat() / getImageMaxHeight().toFloat()
-//        )
-//        val scaleShape = Math.max(
-//            mSelectedImage!!.width.toFloat() / mSelectedImage!!.height.toFloat() ,
-//            getImageMaxWidth().toFloat() / getImageMaxHeight().toFloat()
-//        )
-//        Log.d("ok", "mSelectedImage!!.width:  " + mSelectedImage!!.width.toFloat().toString())
-//        Log.d("ok", "mSelectedImage!!.height:  " + mSelectedImage!!.height.toFloat().toString())
-//        Log.d(
-//            "ok",
-//            "x = " + (((mSelectedImage?.width!!.toFloat() / mSelectedImage?.height!!.toFloat() * getImageMaxHeight().toFloat()) - getImageMaxWidth().toFloat()) / 2 * mSelectedImage?.width!!.toFloat() / mSelectedImage?.height!!.toFloat()).toString()
-//        )
-//        Log.d(
-//            "ok",
-//            "x = " + (((mSelectedImage?.width!!.toFloat() / mSelectedImage?.height!!.toFloat() * getImageMaxHeight().toFloat()) - getImageMaxWidth().toFloat())).toString()
-//        )
-//        Log.d(
-//            "ok",
-//            "x = " + (((mSelectedImage?.width!!.toFloat() / mSelectedImage?.height!!.toFloat() * getImageMaxHeight().toFloat()))).toString()
-//        )
-//        Log.d(
-//            "ok",
-//            "x = " + (((mSelectedImage?.width!!.toFloat() / mSelectedImage?.height!!.toFloat())).toString())
-//        )
-//        Log.d(
-//            "ok",
-//            "width = " + ((getImageMaxWidth().toFloat() * mSelectedImage?.width!!.toFloat() / mSelectedImage?.height!!.toFloat()).toInt()).toString())
-//
-//        Log.d(
-//            "ok",
-//            "hight = " + ((getImageMaxHeight().toFloat() * mSelectedImage?.width!!.toFloat() / mSelectedImage?.height!!.toFloat()).toInt()).toString())
-//
 
         if(mSelectedImage?.width!!.toFloat()/mSelectedImage?.height!!.toFloat()<1){
             mSelectedImage = Bitmap.createBitmap(
@@ -229,29 +185,11 @@ class MainActivity : AppCompatActivity(), LuminnosityAnalyzerCallBack {
             getImageMaxHeight(),
             true
         )
-//        Log.d("ok", "imageProxy!!.width:  " + imageProxy.width.toFloat().toString())
-//        Log.d("ok", "imageProxy!!.height:  " + imageProxy.height.toFloat().toString())
-//        Log.d("ok", "cropRect:  $cropRect")
 
-//        Log.d("ok","scaleFactor:  " + scaleFactor.toInt().toString())
-//        Log.d("ok","mSelectedImage!!.width / scaleFactor:  " + (mSelectedImage!!.width / scaleFactor).toInt().toString() )
-//        Log.d("ok","mSelectedImage!!.height / scaleFactor:  " + (mSelectedImage!!.height / scaleFactor).toInt().toString() )
+        val matrix = Matrix()
+        matrix.postRotate(270f)
+        mSelectedImage = Bitmap.createBitmap(resizedBitmap!!, 0, 0, resizedBitmap!!.width, resizedBitmap!!.height, matrix, true)
 
-        mSelectedImage = resizedBitmap
-//
-
-//        Log.d("ok", "targetWidth:  " + getImageMaxWidth().toFloat().toString())
-//        Log.d("ok", "maxHeight:  " + getImageMaxHeight().toFloat().toString())
-//        Log.d(
-//            "ok",
-//            "mSelectedImage!!.width / targetWidth:  " + (mSelectedImage!!.width.toFloat() / getImageMaxWidth().toFloat()).toString()
-//        )
-//        Log.d(
-//            "ok",
-//            "mSelectedImage!!.height / maxHeight:  " + (mSelectedImage!!.height.toFloat() / getImageMaxHeight().toFloat()).toString()
-//        )
-//        Log.d("ok","mSelectedImage!!.width:  " + mSelectedImage!!.width.toFloat().toString() )
-//        Log.d("ok","mSelectedImage!!.height:  " + mSelectedImage!!.height.toFloat().toString() )
         val image = InputImage.fromBitmap(mSelectedImage!!, 0)
         val recognizer = TextRecognition.getClient()
         recognizer.process(image)
@@ -264,18 +202,72 @@ class MainActivity : AppCompatActivity(), LuminnosityAnalyzerCallBack {
             .addOnCompleteListener { imageProxy.close() }
 
     }
+    var line1Result: String = ""
+    var line2Result: String = ""
+    var line3Result: String = ""
+    var textMRZResult: String = ""
+
+    private fun findTextMRZ(text: String): String {
+        var line1: String = text.substring(0, 30)
+        var line2: String = text.substring(30, 60)
+        var line3: String = text.substring(60, 90)
+        line1 = line1.substring(0, 5)+line1.substring(5).replace("O", "0")
+        line2 = line2.substring(0, 29)+line2.substring(29).replace("O", "0")
+        line1 = line1.replace("K<", "<<")
+        line1 = line1.replace("S<", "<<")
+        line1 = line1.replace("s<", "<<")
+        line1 = line1.replace("k<", "<<")
+        val pattern1 = "I[A-Z]{4}[0-9]{22}+<{2}[0-9]{1}".toRegex()
+        val pattern2 = "[A-Z0-9]{2,30}+<{2,20}[0-9]{1}".toRegex()
+        val pattern3 = "\\w+<<(\\w+<)+<{3,15}".toRegex()
+
+        if (pattern1.matches(line1)) {
+            line1Result = line1
+        }
+        if (pattern2.matches(line2)) {
+            line2Result = line2
+        }
+        if (pattern3.matches(line3)) {
+            line3Result = line3
+        }
+        line3Result = line3
+        return line1Result + line2Result + line3Result
+    }
+
 
     // Ham nay tra ve kq, lay ra text
     private fun processTextRecognitionResult(texts: Text) {
         textTest = texts
         val blocks = texts.textBlocks
+
         if (blocks.size == 0) {
             mGraphicOverlay!!.clear()
             return
         }
         mGraphicOverlay!!.clear()
         for (block in texts.textBlocks) {
-            Log.d("ok", block.text)
+            var textIndex = block.text
+            if (textIndex.length >= 90 && textIndex.startsWith("I")) {
+//                Log.d("ok", textIndex)
+                textIndex = textIndex.replace(" ", "").trim()
+                textIndex = textIndex.replace("\n", "")
+                textIndex = textIndex.replace("<S<", "<<<")
+                textIndex = textIndex.replace("<K<", "<<<")
+                textIndex = textIndex.replace("<k<", "<<<")
+                textIndex = textIndex.replace("<s<", "<<<")
+                if (textIndex.length == 90) {
+//                    Log.d("ok","=" + textIndex)
+                    textMRZResult = findTextMRZ(textIndex)
+                    if (textMRZResult.length == 90) {
+                        Log.d("ok","=====" + textMRZResult)
+                        line1Result = ""
+                        line2Result = ""
+                        line3Result = ""
+
+
+                    }
+                }
+            }
 
         }
         for (i in blocks.indices) {
@@ -283,9 +275,12 @@ class MainActivity : AppCompatActivity(), LuminnosityAnalyzerCallBack {
             for (j in lines.indices) {
                 val elements = lines[j].elements
                 for (k in elements.indices) {
-                    val textGraphic: GraphicOverlay.Graphic =
-                        TextGraphic(mGraphicOverlay, elements[k])
-                    mGraphicOverlay?.add(textGraphic)
+//                    Log.d("ok", "================"+elements[k].text)
+                    if(elements[k].text.length >= 29 && elements[k].text.contains("<")){
+                        val textGraphic: GraphicOverlay.Graphic =
+                            TextGraphic(mGraphicOverlay, elements[k], getImageMaxWidth(), getImageMaxHeight())
+                        mGraphicOverlay?.add(textGraphic)
+                    }
                 }
             }
         }
